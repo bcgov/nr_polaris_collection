@@ -10,6 +10,7 @@ jdk_install_dir:        'jdk'
 jdk_install_as:         '{{ install_user | default("wwwadm") }}'
 
 # Derived
+jdk_sign_install:       '{{ sign_jdk | default("true") }}'
 jdk_jce_archive:        'java-jce-{{ jdk_major_version }}-2020.zip'
 jdk_jce_download_url:   '{{ artifactory_url }}/ext-binaries-local/com.oracle/jdk{{ jdk_major_version }}/{{ jdk_jce_archive }}'
 jdk_home:               '{{ jdk_install_root }}/{{ jdk_install_dir }}'

@@ -80,10 +80,12 @@
   with_items: "{{ jdk_certs }}"
   become: yes
   become_user: '{{ jdk_install_as }}'
+  when: jdk_sign_install
 
 - name: 'Set jdk cacerts file'
   set_fact:
     jdk_cacerts_file: '{{ jdk_home }}/{{ "jre/lib/security/cacerts" if jdk_major_version == "8" else "lib/security/cacerts" }}'
+  when: jdk_sign_install
 
 - name: 'Import certs'
   java_cert:
@@ -95,6 +97,7 @@
   with_items: "{{ jdk_certs }}"
   become: yes
   become_user: '{{ jdk_install_as }}'
+  when: jdk_sign_install
 
 - name: 'Download JCE to /tmp/{{ jdk_jce_archive }}'
   get_url:
@@ -105,7 +108,7 @@
     mode: '0777'
   become: yes
   become_user: '{{ jdk_install_as }}'
-  when: jdk_major_version == '8'
+  when: jdk_sign_install and jdk_major_version == '8'
 
 - name: 'Extract JCE JARs to {{ jdk_home }}/jre/lib/security/'
   shell: unzip -j -o /tmp/{{ jdk_jce_archive }} '*.jar'
@@ -113,7 +116,7 @@
     chdir: "{{ jdk_home }}/jre/lib/security/"
   become: yes
   become_user: '{{ jdk_install_as }}'
-  when: jdk_major_version == '8'
+  when: jdk_sign_install and jdk_major_version == '8'
 
 - name: 'Patch intention'
   include_role:
@@ -123,3 +126,4 @@
     _jdk_major_version: "{{ jdk_major_version }}"
     _jdk_url: "{{ jdk_package_link }}"
     _jdk_release_name: "{{ jdk_release_name }}"
+  when: jdk_sign_install
