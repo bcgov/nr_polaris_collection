@@ -1,0 +1,3 @@
+cdconf_variables_dir: "{{playbook_dir}}/vars"
+artifactory_username: "{{ username }}"
+artifactory_password: "{{ password }}"

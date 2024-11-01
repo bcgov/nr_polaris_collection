@@ -1,0 +1,29 @@
+---
+- name: liquibase migration
+  hosts: deployment-servers
+  collections:
+    - bcgov.nr
+  vars:
+  vars_prompt:
+    - name: "db_actions"
+      prompt: "Liquibase Actions - one or more CSV of update, verify, rollback, test_rollback, teardown_core, status, run in order.)"
+      private: no
+
+  roles:
+    - name: liquibase_configure
+
+    # install a JDK specific to this application
+    - name: jdk
+      vars:
+        # jdk_version: '8'
+        cd_app_install: '{{ cd_app_home }}' # cd_app_home provided by cd-configure
+        sign_jdk: False
+        jdk_install_as: 'runner'
+
+    - name: liquibase
+      vars:
+         artifact_version: "{{ cd_version }}"
+         #TODO - This could be done as a configuration variable in the liquibase role
+         #db_jdbc_driver_artifactory_url: "https://bwa.nrs.gov.bc.ca/int/artifactory/ext-binaries-local/com.oracle/ojdbc8-19.3.0.0.jar"
+         db_jdbc_driver_url: "https://download.oracle.com/otn-pub/otn_software/jdbc/235/ojdbc11.jar"
+

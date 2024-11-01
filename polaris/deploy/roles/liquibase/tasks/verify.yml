@@ -1,0 +1,10 @@
+---
+- name: "Verify"
+  shell: "chdir={{ lb_working_dir }} JAVA_HOME={{ cd_app_home }}/jdk {{ lb_liquibase_staging_dir }}/liquibase --changeLogFile=../nrdk/nrdk.xml --contexts=verify update -Dpre_stage=pre{{ cd_version }} -Dpost_stage=post{{ cd_version }}"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+  register: verify_output
+
+- name: "Show verify stdout"
+  debug:
+    var: verify_output

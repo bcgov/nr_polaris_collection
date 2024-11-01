@@ -1,0 +1,43 @@
+---
+# defaults file for liquibase
+# namespace is lb_*
+
+######################
+# Required properties
+######################
+
+# Required
+lb_deploy_scripts_user: "{{ deploy_scripts_user | default('runner') }}"
+
+lb_app_artifactory_url: "{{ app_artifactory_url | default('https://bwa.nrs.gov.bc.ca/int/artifactory/libs-staging-local') }}"
+lb_app_artifactory_snapshot_url: "{{ app_artifactory_snapshot_url | default('https://bwa.nrs.gov.bc.ca/int/artifactory/libs-snapshot-local') }}"
+
+lb_app_artifactory_download_url: "{{ ((cd_version | regex_search('SNAPSHOT')) == 'SNAPSHOT') | ternary(lb_app_artifactory_snapshot_url, lb_app_artifactory_url) }}"
+
+lb_liquibase_staging_dir:  "{{ cd_app_home }}/liquibase"
+lb_liquibase_library_dir:  "{{ lb_liquibase_staging_dir }}/lib"
+lb_liquibase_version: "{{ liquibase_version | default('4.6.2') }}"
+lb_liquibase_download_url: "https://github.com/liquibase/liquibase/releases/download/v{{lb_liquibase_version}}/liquibase-{{lb_liquibase_version}}.tar.gz"
+
+lb_jdbc_driver_artifactory_url: "{{db_jdbc_driver_url | default('https://bwa.nrs.gov.bc.ca/int/artifactory/ext-binaries-local/com.oracle/ojdbc8-12.2.0.1.jar')}}"
+
+cd_migrations_base_dir: "{{ migrations_base_dir | default('cd/migrations') }}"
+lb_working_dir: "{{ cd_app_home }}/{{ working_dir | default(cd_migrations_base_dir+'/'+db_username) }}"
+lb_log_level: "{{ log_level | default('info') }}"
+
+lb_changelog_file: "{{ changelog_file | default('changelog.xml') }}"
+lb_db_url: "{{ db_url }}"
+lb_db_username: "{{ db_username }}"
+lb_db_password: "{{ db_password }}"
+lb_actions: "{{ (db_actions | default('update')).split(',') }}"
+
+lb_migrations_artifact:
+  group_id: "{{ artifact_group_id }}"
+  artifact_id: "{{ artifact_id }}"
+  type: "{{ artifact_type }}"
+  classifier: "{{ artifact_classifier }}"
+  version: "{{ cd_version }}"
+  name: "{{ artifact_id+'-'+cd_version+'-'+artifact_classifier+'.'+artifact_type }}"
+
+
+lb_overwrite_schema_state: "{{ overwrite_schema_state | default(True) }}"

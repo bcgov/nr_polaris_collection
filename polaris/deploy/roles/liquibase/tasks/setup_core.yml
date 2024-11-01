@@ -1,0 +1,24 @@
+---
+- debug:
+    var: jdk_install_root
+
+- name: "Setup core IITD migration framework, compile schema and log schema state"
+  shell: "chdir={{lb_working_dir}} JAVA_HOME={{ cd_app_home }}/jdk {{ lb_liquibase_staging_dir }}/liquibase --changeLogFile=../nrdk/nrdk.xml --contexts=setup,compile_schema update -Dstage=pre{{cd_version}}"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+
+- name: "Clear schema state for stage pre{{cd_version}}"
+  shell: "chdir={{lb_working_dir}} JAVA_HOME={{ cd_app_home }}/jdk {{ lb_liquibase_staging_dir }}/liquibase --changeLogFile=../nrdk/nrdk.xml --contexts=clear_schema_state update -Dstage=pre{{cd_version}}"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+  when: lb_overwrite_schema_state|bool == True
+
+- name: "Log schema state for stage pre{{cd_version}}"
+  shell: "chdir={{lb_working_dir}} JAVA_HOME={{ cd_app_home }}/jdk {{ lb_liquibase_staging_dir }}/liquibase --changeLogFile=../nrdk/nrdk.xml --contexts=log_schema_state update -Dstage=pre{{cd_version}}"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+
+- name: "Tag database before running migration"
+  shell: "chdir={{lb_working_dir}} JAVA_HOME={{ cd_app_home }}/jdk {{ lb_liquibase_staging_dir }}/liquibase --changeLogFile=../nrdk/nrdk.xml --contexts=pre_tag  update -Dmigration_tag={{cd_version}}"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"

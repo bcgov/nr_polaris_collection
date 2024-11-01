@@ -1,0 +1,44 @@
+---
+- name: "Ensure the target environment has been specified"
+  assert:
+    that:
+      - cdconf_target is defined
+      - cd_version is defined
+
+- name: "Ensure credentials have been set"
+  assert:
+    that:
+      - (username is defined and (username | length > 0) and password is defined and (password | length > 0)) or (github_token is defined and (github_token | length > 0))
+    fail_msg: "username and password must be set for bitbucket source, or github_token for GitHub source"
+
+- name: Get playbook variables file
+  get_url:
+     url: "{{ playbook_vars_url | trim }}"
+     dest: "{{ lookup('env','PWD') }}/playbook_vars.yml"
+     url_username: "{{ username }}"
+     url_password: "{{ password }}"
+     force: yes
+  when: (username is defined and (username | length > 0) and password is defined and (password | length > 0))
+
+- name: Get playbook variables file from GitHub
+  ansible.builtin.uri:
+    url: "{{ playbook_vars_url | trim }}"
+    dest: "{{ lookup('env','PWD') }}/playbook_vars.yml"
+    headers:
+      Authorization: "Bearer {{ github_token }}"
+    force: yes
+  when: github_token is defined and (github_token | length > 0)
+
+
+- name: Get variables from configuration file
+  include_vars: "{{ lookup('env','PWD') }}/playbook_vars.yml"
+
+- name: "Flatten target variables for {{ cdconf_target }}"
+  set_fact:
+     "{{ item.key }}": "{{item.value}}"
+  with_dict:
+     - "{{ lookup('vars', cdconf_target) }}"
+
+- name: "Set variables for liquibase deployment"
+  set_fact:
+     cd_app_home: "/apps_ux/{{ project }}/{{ artifact_id }}"

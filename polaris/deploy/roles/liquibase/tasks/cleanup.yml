@@ -1,0 +1,8 @@
+---
+- name: "remove liquibase directory"
+  file:
+    path: '{{ cd_app_home }}'
+    state: 'absent'
+    mode: 0755
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"

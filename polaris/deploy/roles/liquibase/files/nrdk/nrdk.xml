@@ -1,0 +1,145 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <!-- Properties file to include from application migration directory -->
+    <property file="deployment.properties"/>
+
+    <changeSet  author="qed"  id="iitd_support_setup" runAlways="true" runOnChange="true" failOnError="false" context="setup" dbms="oracle">
+        <sqlFile  dbms="oracle"
+                  encoding="UTF-8"
+                  endDelimiter="\n@"
+                  path="sql/v2021.11.01.1751.1__create_validation_table.sql"
+                  relativeToChangelogFile="true"
+                  splitStatements="true"
+                  stripComments="true"/>
+        <sqlFile  dbms="oracle"
+                  encoding="UTF-8"
+                  splitStatements="true"
+                  endDelimiter="/"
+                  path="sql/v2021.11.01.1752.1__create_source_backup_table.sql"
+                  relativeToChangelogFile="true"
+                  stripComments="true"/>
+    </changeSet>
+
+    <changeSet  author="qed"  id="iitd_support_pkg_spec" runAlways="true" runOnChange="true" failOnError="false" context="setup">
+        <sqlFile  dbms="oracle"
+                  encoding="UTF-8"
+                  splitStatements="true"
+                  endDelimiter="/"
+                  path="sql/v2021.11.01.1754.1__create_iitd_lb_support_pkg.sql"
+                  relativeToChangelogFile="true"
+                  stripComments="false"/>
+    </changeSet>
+
+    <changeSet  author="qed"  id="iitd_support_pkg_body" runAlways="true" runOnChange="true" failOnError="false" context="setup">
+        <preConditions onFail="WARN" onError="HALT" onFailMessage="Oracle version is 11 or earlier. Using legacy package body">
+            <sqlCheck expectedResult="STANDARD">select decode(min(regexp_replace(regexp_replace(banner,'\..*',''),'.* ','')),'11','LEGACY','STANDARD') from v$version</sqlCheck>
+        </preConditions>
+        <sqlFile  dbms="oracle"
+                  encoding="UTF-8"
+                  splitStatements="true"
+                  endDelimiter="/"
+                  path="sql/v2021.11.01.1755.1__create_iitd_lb_support_pkg_body.sql"
+                  relativeToChangelogFile="true"
+                  stripComments="false"/>
+    </changeSet>
+
+    <changeSet  author="qed"  id="iitd_legacy_support_pkg_body" runAlways="true" runOnChange="true" failOnError="false" context="setup">
+        <preConditions onFail="CONTINUE" onError="HALT">
+            <sqlCheck expectedResult="LEGACY">select decode(min(regexp_replace(regexp_replace(banner,'\..*',''),'.* ','')),'11','LEGACY','STANDARD') from v$version</sqlCheck>
+        </preConditions>
+        <sqlFile  dbms="oracle"
+                  encoding="UTF-8"
+                  splitStatements="true"
+                  endDelimiter="/"
+                  path="sql/v2021.11.01.1755.1__create_iitd_legacy_lb_support_pkg_body.sql"
+                  relativeToChangelogFile="true"
+                  stripComments="false"/>
+    </changeSet>
+
+    <changeSet  author="qed"  id="log_schema_state_${stage}" runAlways="true" runOnChange="true" failOnError="true" context="log_schema_state" dbms="oracle">
+        <sql
+            dbms="oracle">
+            call iitd_lb_support_pkg.log_schema_state('${stage}')
+        </sql>
+    </changeSet>
+
+    <changeSet  author="qed"  id="clear_schema_state_${stage}" runAlways="true" runOnChange="true" failOnError="false" context="clear_schema_state" dbms="oracle">
+        <sql
+                dbms="oracle">
+            call iitd_lb_support_pkg.clear_schema_state('${stage}')
+        </sql>
+    </changeSet>
+
+    <changeSet  author="qed"  id="${migration_tag}_tag" context="tag">
+        <tagDatabase tag="${migration_tag}"/>
+    </changeSet>
+
+    <changeSet  author="qed"  id="pre${migration_tag}_tag" context="pre_tag">
+        <tagDatabase tag="pre${migration_tag}"/>
+    </changeSet>
+
+    <changeSet  author="qed"  id="verify" runAlways="true" context="verify" dbms="oracle">
+        <preConditions onFail="HALT" onError="HALT" >
+            <sqlCheck expectedResult="${pre_delta}">select count(*) from (
+                select validation_type, validation_data from nrdk_tmp_validation where stage = '${pre_stage}' minus
+                select validation_type, validation_data from nrdk_tmp_validation where stage = '${post_stage}'
+                )</sqlCheck>
+            <sqlCheck expectedResult="${post_delta}">select count(*) from (
+                select validation_type, validation_data from nrdk_tmp_validation where stage = '${post_stage}' minus
+                select validation_type, validation_data from nrdk_tmp_validation where stage = '${pre_stage}'
+                )</sqlCheck>
+        </preConditions>
+        <comment>Results expected ${pre_stage}:${pre_delta}/${post_stage}:${post_delta}</comment>
+    </changeSet>
+
+    <changeSet  author="qed"  id="verify_rollback" runAlways="true" context="verify_rollback" dbms="oracle">
+        <preConditions onFail="HALT" onError="HALT">
+            <sqlCheck expectedResult="0">select count(*) from (
+                select validation_type, validation_data from nrdk_tmp_validation where stage = '${pre_stage}' minus
+                select validation_type, validation_data from nrdk_tmp_validation where stage = '${post_stage}'
+                )</sqlCheck>
+            <sqlCheck expectedResult="0">select count(*) from (
+                select validation_type, validation_data from nrdk_tmp_validation where stage = '${post_stage}' minus
+                select validation_type, validation_data from nrdk_tmp_validation where stage = '${pre_stage}'
+                )</sqlCheck>
+        </preConditions>
+        <comment>Results expected ${pre_stage}:0 / ${post_stage}:0 </comment>
+    </changeSet>
+
+    <changeSet  author="qed"  id="iitd_support_teardown" runAlways="true" runOnChange="true" failOnError="false" context="teardown" dbms="oracle">
+        <sqlFile  dbms="oracle"
+                  encoding="UTF-8"
+                  path="sql/v2021.11.01.1756.1__drop_iitd_lb_support_pkg.sql"
+                  relativeToChangelogFile="true"
+                  stripComments="true"/>
+        <sqlFile  dbms="oracle"
+                  encoding="UTF-8"
+                  splitStatements="true"
+                  endDelimiter=";"
+                  path="sql/v2021.11.01.1757.1__drop_source_backup_table.sql"
+                  relativeToChangelogFile="true"
+                  stripComments="true"/>
+        <sqlFile  dbms="oracle"
+                  encoding="UTF-8"
+                  endDelimiter="\n@"
+                  path="sql/v2021.11.01.1758.1__drop_validation_table.sql"
+                  relativeToChangelogFile="true"
+                  splitStatements="true"
+                  stripComments="true"/>
+    </changeSet>
+
+    <changeSet  author="qed"  id="compile_invalid_objects" runAlways="true" runOnChange="true" context="compile_schema" dbms="oracle">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="SHOULD_RUN">select decode(count(*), 0, 'DONT_RUN','SHOULD_RUN') from user_objects where status = 'INVALID'</sqlCheck>
+        </preConditions>
+        <sql
+                dbms="oracle"> call iitd_lb_support_pkg.compile_objects('${compile_exclusion_csv}')</sql>
+        <rollback/>
+    </changeSet>
+</databaseChangeLog>

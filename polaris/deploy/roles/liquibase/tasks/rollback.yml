@@ -1,0 +1,21 @@
+---
+- name: "Rollback to version pre{{cd_version}}"
+  shell: "chdir={{lb_working_dir}} JAVA_HOME={{ cd_app_home }}/jdk {{ lb_liquibase_staging_dir }}/liquibase rollback pre{{cd_version}} -Dapp_version={{cd_version}}"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+
+- name: "Recompile schema"
+  shell: "chdir={{ lb_working_dir }} JAVA_HOME={{ cd_app_home }}/jdk {{ lb_liquibase_staging_dir }}/liquibase --changeLogFile=../nrdk/nrdk.xml --contexts=compile_schema update"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+
+- name: "Clear schema state for stage post_rollback{{cd_version}}"
+  shell: "chdir={{lb_working_dir}} JAVA_HOME={{ cd_app_home }}/jdk {{ lb_liquibase_staging_dir }}/liquibase --changeLogFile=../nrdk/nrdk.xml --contexts=clear_schema_state update -Dstage=post_rollback{{cd_version}}"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+  when: lb_overwrite_schema_state|bool == True
+
+- name: "Log schema state for stage post_rollback{{cd_version}}"
+  shell: "chdir={{ lb_working_dir }} JAVA_HOME={{ cd_app_home }}/jdk {{ lb_liquibase_staging_dir }}/liquibase --changeLogFile=../nrdk/nrdk.xml --contexts=log_schema_state update -Dstage=post_rollback{{ cd_version }}"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"

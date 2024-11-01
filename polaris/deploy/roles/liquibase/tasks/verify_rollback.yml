@@ -1,0 +1,10 @@
+---
+- name: "Verify Rollback"
+  shell: "chdir={{ lb_working_dir }} JAVA_HOME={{ cd_app_home }}/jdk {{ lb_liquibase_staging_dir }}/liquibase --changeLogFile=../nrdk/nrdk.xml --contexts=verify_rollback update -Dpre_stage=pre{{ cd_version }} -Dpost_stage=post_rollback{{ cd_version }}"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+  register: verify_rollback_output
+
+- name: "Show verify rollback stdout"
+  debug:
+    var: verify_rollback_output

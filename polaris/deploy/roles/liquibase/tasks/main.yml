@@ -1,0 +1,109 @@
+---
+- name: "Ensure release version is set"
+  assert:
+    fail_msg: "artifact_version must be defined"
+    that:
+       - ((artifact_version | default('')) | length) > 0
+
+- name: "create liquibase directory"
+  file:
+    path: '{{ lb_liquibase_staging_dir }}'
+    state: 'directory'
+    mode: 0755
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+
+- name: "download liquibase library"
+  unarchive:
+    src: "{{lb_liquibase_download_url}}"
+    dest: "{{lb_liquibase_staging_dir}}"
+    copy: no
+    mode: 0755
+    creates: "{{lb_liquibase_staging_dir}}/liquibase"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+
+- name: "Download JDBC library"
+  get_url:
+    url: "{{ lb_jdbc_driver_artifactory_url }}"
+    dest: "{{lb_liquibase_staging_dir}}/lib/"
+    url_username: "{{ artifactory_username }}"
+    url_password: "{{ artifactory_password }}"
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+
+- name: "Remove previous version of artifact and migrations working dir if they exist"
+  file:
+    path: "{{ item }}"
+    state: absent
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+  with_items:
+    - "{{ lb_working_dir }}"
+    - "{{ cd_app_home }}/{{ lb_migrations_artifact.name }}"
+
+- name: "copy nrdk framework"
+  ansible.builtin.copy:
+    src: "nrdk"
+    dest: "{{ cd_app_home }}/{{ cd_migrations_base_dir }}"
+    mode: 0700
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+
+- name: "download artifact from repository: {{ lb_migrations_artifact.name }}"
+  maven_artifact:
+    repository_url: "{{ lb_app_artifactory_download_url }}"
+    group_id: "{{ lb_migrations_artifact.group_id }}"
+    artifact_id: "{{ lb_migrations_artifact.artifact_id }}"
+    version: "{{ lb_migrations_artifact.version }}"
+    extension: "{{ lb_migrations_artifact.type }}"
+    classifier: "{{ lb_migrations_artifact.classifier }}"
+    username: "{{ artifactory_username }}"
+    password: "{{ artifactory_password }}"
+    dest: "{{ cd_app_home }}/{{ lb_migrations_artifact.name }}"
+    timeout: 100
+  #    mode: 0755
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+  when: (username is defined and (username | length > 0) and password is defined and (password | length > 0))
+
+- name: "download artifact from GitHub repo: {{ lb_migrations_artifact.name }}"
+  maven_artifact:
+    repository_url: "{{ lb_app_artifactory_download_url }}"
+    group_id: "{{ lb_migrations_artifact.group_id }}"
+    artifact_id: "{{ lb_migrations_artifact.artifact_id }}"
+    version: "{{ lb_migrations_artifact.version }}"
+    extension: "{{ lb_migrations_artifact.type }}"
+    classifier: "{{ lb_migrations_artifact.classifier }}"
+    dest: "{{ cd_app_home }}/{{ lb_migrations_artifact.name }}"
+    timeout: 100
+    headers:
+      Authorization: "Bearer {{ github_token }}"
+  #    mode: 0755
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+  when: github_token is defined and (github_token | length > 0)
+
+- name: "uncompress {{ lb_migrations_artifact.name }}"
+  unarchive:
+    src: "{{ cd_app_home }}/{{ lb_migrations_artifact.name }}"
+    dest: "{{ cd_app_home }}"
+    mode: 0755
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+
+- debug:
+   var: lb_working_dir
+
+- name: "Create liquibase properties file"
+  template:
+     src: "templates/liquibase.properties.j2"
+     dest: "{{ lb_working_dir }}/liquibase.properties"
+     mode: 0600
+  become: yes
+  become_user: "{{ lb_deploy_scripts_user }}"
+
+- name: "Perform {{ lb_actions }}"
+  include_tasks: "{{ item }}.yml"
+  with_items:
+     - "{{ lb_actions }}"

@@ -1,0 +1,1 @@
+drop table nrdk_tmp_source purge;
