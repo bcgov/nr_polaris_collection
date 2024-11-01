@@ -20,6 +20,7 @@
     copy: no
     mode: 0755
     creates: "{{lb_liquibase_staging_dir}}/liquibase"
+  environment: '{{ (proxy_env_dev_test if proxy_env == "dev" or proxy_env == "test") or (proxy_env_prod if proxy_env == "prod") | default({}) }}'
   become: yes
   become_user: "{{ lb_deploy_scripts_user }}"
 
@@ -27,6 +28,7 @@
   get_url:
     url: "{{ lb_jdbc_driver_url }}"
     dest: "{{lb_liquibase_staging_dir}}/lib/"
+  environment: '{{ (proxy_env_dev_test if proxy_env == "dev" or proxy_env == "test") or (proxy_env_prod if proxy_env == "prod") | default({}) }}'
   become: yes
   become_user: "{{ lb_deploy_scripts_user }}"
 
@@ -48,23 +50,6 @@
   become: yes
   become_user: "{{ lb_deploy_scripts_user }}"
 
-- name: "download artifact from repository: {{ lb_migrations_artifact.name }}"
-  maven_artifact:
-    repository_url: "{{ lb_app_artifactory_download_url }}"
-    group_id: "{{ lb_migrations_artifact.group_id }}"
-    artifact_id: "{{ lb_migrations_artifact.artifact_id }}"
-    version: "{{ lb_migrations_artifact.version }}"
-    extension: "{{ lb_migrations_artifact.type }}"
-    classifier: "{{ lb_migrations_artifact.classifier }}"
-    username: "{{ artifactory_username }}"
-    password: "{{ artifactory_password }}"
-    dest: "{{ cd_app_home }}/{{ lb_migrations_artifact.name }}"
-    timeout: 100
-  #    mode: 0755
-  become: yes
-  become_user: "{{ lb_deploy_scripts_user }}"
-  when: (username is defined and (username | length > 0) and password is defined and (password | length > 0))
-
 - name: "download artifact from GitHub repo: {{ lb_migrations_artifact.name }}"
   maven_artifact:
     repository_url: "{{ lb_app_artifactory_download_url }}"
@@ -78,6 +63,7 @@
     headers:
       Authorization: "Bearer {{ github_token }}"
   #    mode: 0755
+  environment: '{{ (proxy_env_dev_test if proxy_env == "dev" or proxy_env == "test") or (proxy_env_prod if proxy_env == "prod") | default({}) }}'
   become: yes
   become_user: "{{ lb_deploy_scripts_user }}"
   when: github_token is defined and (github_token | length > 0)
