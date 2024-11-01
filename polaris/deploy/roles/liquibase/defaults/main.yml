@@ -19,7 +19,7 @@ lb_liquibase_library_dir:  "{{ lb_liquibase_staging_dir }}/lib"
 lb_liquibase_version: "{{ liquibase_version | default('4.6.2') }}"
 lb_liquibase_download_url: "https://github.com/liquibase/liquibase/releases/download/v{{lb_liquibase_version}}/liquibase-{{lb_liquibase_version}}.tar.gz"
 
-lb_jdbc_driver_artifactory_url: "{{db_jdbc_driver_url | default('https://bwa.nrs.gov.bc.ca/int/artifactory/ext-binaries-local/com.oracle/ojdbc8-12.2.0.1.jar')}}"
+lb_jdbc_driver_url: "{{db_jdbc_driver_url | default('https://bwa.nrs.gov.bc.ca/int/artifactory/ext-binaries-local/com.oracle/ojdbc8-12.2.0.1.jar')}}"
 
 cd_migrations_base_dir: "{{ migrations_base_dir | default('cd/migrations') }}"
 lb_working_dir: "{{ cd_app_home }}/{{ working_dir | default(cd_migrations_base_dir+'/'+db_username) }}"
