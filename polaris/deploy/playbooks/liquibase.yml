@@ -4,6 +4,7 @@
   collections:
     - bcgov.nr
   vars:
+    - apps_home: "/apps_ux"
   vars_prompt:
     - name: "db_actions"
       prompt: "Liquibase Actions - one or more CSV of update, verify, rollback, test_rollback, teardown_core, status, run in order.)"
