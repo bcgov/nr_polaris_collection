@@ -20,16 +20,13 @@
   # fsbwhse_db_password:
   # proxy_env:
   # github_token:
+  #
   # Currently run in a ansible-provisioned docker container as follows:
   # ansible-playbook \
   #      -i collections.bak/ansible_collections/bcgov/nr/inventory/localhost \
   #      -vvv \
   #      --extra-vars @./local_vars.yml \
   #      collections/ansible_collections/polaris/deploy/playbooks/liquibase.yml
-
-
-
-
 
   roles:
     - name: liquibase_configure
@@ -46,6 +43,4 @@
       vars:
          artifact_version: "{{ cd_version }}"
          #TODO - This could be done as a configuration variable in the liquibase role
-         #db_jdbc_driver_artifactory_url: "https://bwa.nrs.gov.bc.ca/int/artifactory/ext-binaries-local/com.oracle/ojdbc8-19.3.0.0.jar"
          db_jdbc_driver_url: "https://download.oracle.com/otn-pub/otn_software/jdbc/235/ojdbc11.jar"
-
