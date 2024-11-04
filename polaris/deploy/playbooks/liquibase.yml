@@ -23,7 +23,7 @@
   #
   # Currently run in a ansible-provisioned docker container as follows:
   # ansible-playbook \
-  #      -i collections.bak/ansible_collections/bcgov/nr/inventory/localhost \
+  #      -i collections/ansible_collections/polaris/deploy/inventory/localhost \
   #      -vvv \
   #      --extra-vars @./local_vars.yml \
   #      collections/ansible_collections/polaris/deploy/playbooks/liquibase.yml
