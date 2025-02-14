@@ -1,45 +1,23 @@
 ---
-jasper_server_instance: "{{ cfg_jasper_server_instance }}"
-
-jasper_env: "{{ cfg_jasper_env }}"
+jasper_server_instance: "{{ jasper_server_instance | upper | default('') }}"
+jasper_project_name: "{{ jasper_project_name | upper | default('') }}"
+jasper_ds_0_url: "{{ lookup('ansible.builtin.env', 'PODMAN_cfg_jasper_ds_0_url') | default('') }}"
+jasper_ds_0_user: "{{ lookup('ansible.builtin.env', 'PODMAN_cfg_jasper_ds_0_user') | default('') }}"
+jasper_ds_0_password: "{{ lookup('ansible.builtin.env', 'PODMAN_cfg_jasper_ds_0_password') | default('') }}"
+jasper_deployer_url: "{{ lookup('ansible.builtin.env', 'PODMAN_cfg_jasper_deployer_url') | default('') }}"
+jasper_deployer_user: "{{ lookup('ansible.builtin.env', 'PODMAN_cfg_jasper_deployer_user') | default('') }}"
+jasper_deployer_password: "{{ lookup('ansible.builtin.env', 'PODMAN_cfg_jasper_deployer_password') | default('') }}"
+jasper_env: "{{ jasper_env | default('') }}"
 
 jasper_invalid_project_names:
   - JCRS
   - NRSRS
-  - JCRS/Data_Sources
-  - NRSRS/Data_Sources
-  - JCRS/HOME
-  - NRSRS/HOME
-
-jasper_project_name: "{{ cfg_jasper_project_name }}"
-jasper_datasource_config_filename: "{{ jasper_server_instance }}_{{ jasper_project_name }}.xml"
-
-jasper_remote_paths:
-  - "{{ jasper_server_instance }}/{{ jasper_project_name }}"
-  - "{{ jasper_server_instance }}/Data_Sources/{{ jasper_datasource_config_filename }}"
+  - Data_Sources
+  - HOME
+  - Admin
+  - Common
 
 jasper_reports_dir: "{{ playbook_dir }}/jcrs-reports"
 
-jasper_archives:
-  - { path: "{{ jasper_reports_dir }}/main/", dest: "{{ jasper_reports_dir }}/main.zip" }
-  - { path: "{{ jasper_reports_dir }}/_template/", dest: "{{ jasper_reports_dir}}/template.zip" }
-
-jasper_import_files:
-  - /template.zip
-  - /main.zip
-
-jasper_cookie_key: "{{ 'ROUTEID0' if jasper_server_instance == 'JCRS' else 'ROUTEID' if jasper_server_instance == 'NRSRS' else undefined }}"
-
-jasper_route_ids:
-  - ".1"
-  - ".2"
-
-jasper_source_files:
-  - { src: ../src/jasper-server/src/main/resources/, dest: "{{ jasper_reports_dir }}/main" }
-  - { src: ../src/jasper-server/src/main/common/, dest: "{{ jasper_reports_dir }}/main/resources/{{ jasper_server_instance }}/Common" }
-  - { src: ../src/jasper-server/src/main/template/, dest: "{{ jasper_reports_dir }}/_template" }
-  - { src: "../src/jasper-server/src/main/template/resources/{{ jasper_server_instance }}/Data_Sources", dest: "{{ jasper_reports_dir }}/main/resources/{{ jasper_server_instance }}" }
-
-jasper_config_file_destinations:
-  - "{{ jasper_reports_dir }}/_template/resources/{{ jasper_server_instance }}/Data_Sources/{{ jasper_datasource_config_filename }}"
-  - "{{ jasper_reports_dir }}/main/resources/{{ jasper_server_instance }}/Data_Sources/{{ jasper_datasource_config_filename }}"
+jasper_cookie_key: "{{ jasper_cookie_key | default('') }}"
+jasper_route_id: "{{ jasper_route_id | default('') }}"

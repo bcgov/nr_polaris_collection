@@ -1,38 +1,45 @@
-Role Name
-=========
+## jasper_reports - Deploy Jasper reports
 
-A brief description of the role goes here.
+This role deploys reports and datasources to JasperReports Server instances.
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Ansible 2.17 or higher
+- Access to the JasperReports Server
+- The `xmllint` utility for XML parsing
 
-Role Variables
---------------
+## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+The following variables can be set to customize the role's behavior:
 
-Dependencies
-------------
+- `jasper_server_instance`: The instance of the JasperReports Server. Must be either 'JCRS' or 'NRSRS'.
+- `jasper_project_name`: The name of the Jasper project. Must NOT be in the list of invalid project names.
+- `jasper_ds_0_url`: The URL of the primary datasource.
+- `jasper_ds_0_user`: The username for the primary datasource.
+- `jasper_ds_0_password`: The password for the primary datasource.
+- `jasper_deployer_url`: The URL used for deploying reports to the JasperReports Server.
+- `jasper_deployer_user`: The username for deploying reports to the JasperReports Server.
+- `jasper_deployer_password`: The password for deploying reports to the JasperReports Server.
+- `jasper_cookie_key`: The key for the JasperReports Server loadbalancing cookie.
+- `jasper_route_id`: The route ID for the JasperReports Server instance.
+- `jasper_env`: The environment in which the JasperReports Server is running. Must be one of 'dev', 'test', or 'prod'.
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+## Example Playbook
 
-Example Playbook
-----------------
-
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```yaml
+- hosts: all
+  roles:
+    - role: jasper_reports
+      vars:
+        jasper_server_instance: "JCRS"
+        jasper_project_name: "EXAMPLE"
+        jasper_ds_0_url: "jdbc:oracle:thin:@//hostname:port/service_name"
+        jasper_ds_0_user: "user"
+        jasper_ds_0_password: "password"
+        jasper_deployer_url: "https://jasper.example.com"
+        jasper_deployer_user: "deployer"
+        jasper_deployer_password: "password"
+        jasper_cookie_key: "COOKIE_KEY"
+        jasper_route_id: "ROUTE_ID"
+        jasper_env: "dev"
+```
