@@ -1,0 +1,221 @@
+---
+- name: Ensure server instance, environment and project name are defined and valid
+  fail:
+    msg: |
+      Error: server instance or project name is undefined or invalid!
+        ==> Jasper server instance: {{ jasper_server_instance }}
+        ==> Jasper environment: {{ jasper_env }}
+        ==> Jasper project name: {{ jasper_project_name }}
+    when: jasper_server_instance and jasper_project_name and jasper_env is defined and project_name not in invalid_project_names
+
+- name: Install xmllint on Alpine Linux
+  apk:
+    name: libxml2-utils
+    state: present
+  when: ansible_os_family == "Alpine"
+
+- name: Copy source files
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop: "{{ jasper_source_files }}"
+
+- name: Generate config files
+  template:
+    src: "templates/{{ jasper_datasource_config_filename }}.j2"
+    dest: "{{ item }}"
+  loop: "{{ jasper_config_file_destinations }}"
+
+- name: Create archives
+  archive:
+    path: "{{ item.path }}"
+    dest: "{{ item.dest }}"
+    format: zip
+  loop: "{{ jasper_archives }}"
+
+# - name: Delete reports and data sources for route 1
+#   uri:
+#     url: "{{ cfg_jasper_deployer_url }}/rest/resource/{{ item }}"
+#     force_basic_auth: yes
+#     user: "{{ cfg_jasper_deployer_user }}"
+#     password: "{{ cfg_jasper_deployer_password }}"
+#     method: DELETE
+#     headers:
+#       Cookie: "{{ jasper_cookie_key }}=.1"
+#     return_content: true
+#     validate_certs: false
+#   register: delete_responses_route_1
+#   loop: "{{ paths }}"
+#   when: env_vars == 'dev' or env_vars == 'test' or env_vars == 'prod'
+#   ignore_errors: true
+
+# - name: Delete reports and data sources for route 2
+#   uri:
+#     url: "{{ cfg_jasper_deployer_url }}/rest/resource/{{ item }}"
+#     force_basic_auth: yes
+#     user: "{{ cfg_jasper_deployer_user }}"
+#     password: "{{ cfg_jasper_deployer_password }}"
+#     method: DELETE
+#     headers:
+#       Cookie: "ROUTEID0=.2"
+#     return_content: true
+#     validate_certs: false
+#   register: delete_responses_route_2
+#   loop: "{{ paths }}"
+#   when: env_vars == 'test' or env_vars == 'prod'
+#   ignore_errors: true
+
+# - name: Import packages for route 1
+#   uri:
+#     url: "{{ cfg_jasper_deployer_url }}/rest_v2/import"
+#     force_basic_auth: yes
+#     user: "{{ cfg_jasper_deployer_user }}"
+#     password: "{{ cfg_jasper_deployer_password }}"
+#     method: POST
+#     headers:
+#       Content-Type: application/zip
+#       Cookie: "ROUTEID0=.1"
+#     src: "jcrs-reports/{{ item }}"
+#     return_content: true
+#     validate_certs: false
+#   register: import_responses_route_1
+#   loop: "{{ archives }}"
+#   when: env_vars == 'dev' or env_vars == 'test' or env_vars == 'prod'
+
+# - name: Import packages for route 2
+#   uri:
+#     url: "{{ cfg_jasper_deployer_url }}/rest_v2/import"
+#     force_basic_auth: yes
+#     user: "{{ cfg_jasper_deployer_user }}"
+#     password: "{{ cfg_jasper_deployer_password }}"
+#     method: POST
+#     headers:
+#       Content-Type: application/zip
+#       Cookie: "ROUTEID0=.2"
+#     src: "jcrs-reports/{{ item }}"
+#     return_content: true
+#     validate_certs: false
+#   register: import_responses_route_2
+#   loop: "{{ archives }}"
+#   when: env_vars == 'test' or env_vars == 'prod'
+
+# - name: Get contents for route 1
+#   set_fact:
+#     import_contents_route_1: "{{ import_contents_route_1 | default([]) + [{ 'file': item.item, 'content': item.content }] }}"
+#   loop: "{{ import_responses_route_1.results }}"
+#   loop_control:
+#     label: "file: {{ item.item }}, content: {{ item.content | default('') }}"
+#   when: env_vars == 'dev' or env_vars == 'test' or env_vars == 'prod'
+
+# - name: Get contents for route 2
+#   set_fact:
+#     import_contents_route_2: "{{ import_contents_route_2 | default([]) + [{ 'file': item.item, 'content': item.content }] }}"
+#   loop: "{{ import_responses_route_2.results  }}"
+#   when: env_vars == 'test' or env_vars == 'prod'
+#   loop_control:
+#     label: "file: {{ item.item }}, content: {{ item.content | default('') }}"
+
+# - name: Extract state id for route 1
+#   shell: |
+#     echo "{{ item.content }}" \
+#     | sed 's/<?xml version=1.0 encoding=UTF-8 standalone=yes?>/<?xml version="1.0" encoding="UTF-8" standalone="yes"?>/' \
+#     | xmllint --xpath '/state/id/text()' -
+#   register: imports_route_1
+#   loop: "{{ import_contents_route_1 }}"
+#   when: env_vars == 'dev' or env_vars == 'test' or env_vars == 'prod'
+
+# - name: Extract state id for route 2
+#   shell: |
+#     echo "{{ item.content }}" \
+#     | sed 's/<?xml version=1.0 encoding=UTF-8 standalone=yes?>/<?xml version="1.0" encoding="UTF-8" standalone="yes"?>/' \
+#     | xmllint --xpath '/state/id/text()' -
+#   register: imports_route_2
+#   loop: "{{ import_contents_route_2 }}"
+#   when: env_vars == 'test' or env_vars == 'prod'
+
+# - name: pause
+#   pause:
+#     seconds: 5
+
+# - name: Check import statuses for route 1
+#   uri:
+#     url: "{{ cfg_jasper_deployer_url }}/rest_v2/import/{{ item.stdout }}/state"
+#     force_basic_auth: yes
+#     user: "{{ cfg_jasper_deployer_user }}"
+#     password: "{{ cfg_jasper_deployer_password }}"
+#     method: GET
+#     headers:
+#       Cookie: "ROUTEID0=.1"
+#     return_content: true
+#     validate_certs: false
+#   register: import_statuses_route_1
+#   loop: "{{ imports_route_1.results }}"
+#   loop_control:
+#     label: "file: {{ item.item.file }}, state_id: {{ item.stdout }}"
+#   when: env_vars == 'dev' or env_vars == 'test' or env_vars == 'prod'
+
+# - name: Check import statuses for route 2
+#   uri:
+#     url: "{{ cfg_jasper_deployer_url }}/rest_v2/import/{{ item.stdout }}/state"
+#     force_basic_auth: yes
+#     user: "{{ cfg_jasper_deployer_user }}"
+#     password: "{{ cfg_jasper_deployer_password }}"
+#     method: GET
+#     headers:
+#       Cookie: "ROUTEID0=.2"
+#     return_content: true
+#     validate_certs: false
+#   register: import_statuses_route_2
+#   loop: "{{ imports_route_2.results }}"
+#   loop_control:
+#     label: "file: {{ item.item.file }}, state_id: {{ item.stdout }}"
+#   when: env_vars == 'test' or env_vars == 'prod'
+
+# - name: Extract messages for route 1
+#   shell: |
+#     echo "{{ item.content }}" \
+#     | sed 's/<?xml version=1.0 encoding=UTF-8 standalone=yes?>/<?xml version="1.0" encoding="UTF-8" standalone="yes"?>/' \
+#     | xmllint --xpath '/state/message/text()' -
+#   register: messages_route_1
+#   loop: "{{ import_statuses_route_1.results }}"
+#   loop_control:
+#     label: "file: {{ item.item.item.file }}, state_id: {{ item.item.stdout }}"
+#   when: env_vars == 'dev' or env_vars == 'test' or env_vars == 'prod'
+
+# - name: Extract messages for route 2
+#   shell: |
+#     echo "{{ item.content }}" \
+#     | sed 's/<?xml version=1.0 encoding=UTF-8 standalone=yes?>/<?xml version="1.0" encoding="UTF-8" standalone="yes"?>/' \
+#     | xmllint --xpath '/state/message/text()' -
+#   register: messages_route_2
+#   loop: "{{ import_statuses_route_2.results }}"
+#   loop_control:
+#     label: "file: {{ item.item.item.file }}, state_id: {{ item.item.stdout }}"
+#   when: env_vars == 'test' or env_vars == 'prod'
+
+# - name: Print messages for route 1
+#   debug:
+#     msg: "file: {{ item.item.item.item.file }}, state_id: {{ item.item.item.stdout }}, message: {{ item.stdout }}"
+#   tags: debug
+#   loop: "{{ messages_route_1.results }}"
+#   loop_control:
+#     label: "file: {{ item.item.item.item.file }}, state_id: {{ item.item.item.stdout }}, message: {{ item.stdout }}"
+#   when: env_vars == 'dev' or env_vars == 'test' or env_vars == 'prod'
+#   failed_when: item.stdout != "Import succeeded."
+
+# - name: Print messages for route 2
+#   debug:
+#     msg: "file: {{ item.item.item.item.file }}, state_id: {{ item.item.item.stdout }}, message: {{ item.stdout }}"
+#   tags: debug
+#   loop: "{{ messages_route_2.results }}"
+#   loop_control:
+#     label: "file: {{ item.item.item.item.file }}, state_id: {{ item.item.item.stdout }}, message: {{ item.stdout }}"
+#   when: env_vars == 'test' or env_vars == 'prod'
+#   failed_when: item.stdout != "Import succeeded."
+
+# - name: Remove files
+#   file:
+#     path: "{{ playbook_dir }}/{{ item }}"
+#     state: absent
+#   with_items:
+#     - jcrs-reports/
