@@ -48,7 +48,7 @@
     - { path: "{{ jasper_reports_dir }}/main/", dest: "{{ jasper_reports_dir }}/main.zip" }
     - { path: "{{ jasper_reports_dir }}/_template/", dest: "{{ jasper_reports_dir}}/template.zip" }
 
-- name: "Delete the application's reports and datasource on the {{ jasper_server_instance }} server instance (route_id: {{ jasper_route_id }})"
+- name: "Delete the application's reports and datasource on the {{ jasper_server_instance }} server instance node {{ jasper_route_id }}"
   uri:
     url: "{{ jasper_deployer_url }}/rest/resource/{{ item.path }}"
     force_basic_auth: yes
@@ -65,7 +65,7 @@
   when: jasper_env == 'dev' and jasper_route_id == '.1' or jasper_env in ['test', 'prod']
   ignore_errors: true
 
-- name: "Import the template and main packages on the {{ jasper_server_instance }} server instance (route_id: {{ jasper_route_id }})"
+- name: "Import the template and main packages on the {{ jasper_server_instance }} server instance node {{ jasper_route_id }}"
   uri:
     url: "{{ jasper_deployer_url }}/rest_v2/import"
     force_basic_auth: yes
@@ -84,7 +84,7 @@
     - { file: "main.zip" }
   when: jasper_env == 'dev' and jasper_route_id == '.1' or jasper_env in ['test', 'prod']
 
-- name: "Get the content for the {{ jasper_server_instance }} server instance (route_id: {{ jasper_route_id }})"
+- name: "Get the content for the {{ jasper_server_instance }} server instance node {{ jasper_route_id }}"
   set_fact:
     import_content: "{{ import_content | default([]) + [{ 'file': item.item, 'content': item.content }] }}"
   loop: "{{ import_responses.results }}"
@@ -92,7 +92,7 @@
     label: "file: {{ item.item }}, content: {{ item.content | default('') }}"
   when: jasper_env == 'dev' and jasper_route_id == '.1' or jasper_env in ['test', 'prod']
 
-- name: "Extract the state id for the {{ jasper_server_instance }} server instance (route_id: {{ jasper_route_id }})"
+- name: "Extract the state id for the {{ jasper_server_instance }} server instance node {{ jasper_route_id }}"
   shell: |
     echo "{{ item.content }}" \
     | sed 's/<?xml version=1.0 encoding=UTF-8 standalone=yes?>/<?xml version="1.0" encoding="UTF-8" standalone="yes"?>/' \
@@ -107,7 +107,7 @@
   pause:
     seconds: 5
 
-- name: "Check the import status for the {{ jasper_server_instance }} server instance (route_id: {{ jasper_route_id }})"
+- name: "Check the import status for the {{ jasper_server_instance }} server instance node {{ jasper_route_id }}"
   uri:
     url: "{{ jasper_deployer_url }}/rest_v2/import/{{ item.stdout }}/state"
     force_basic_auth: yes
@@ -124,7 +124,7 @@
     label: "file: {{ item.item.file }}, state_id: {{ item.stdout | default('') }}"
   when: jasper_env == 'dev' and jasper_route_id == '.1' or jasper_env in ['test', 'prod']
 
-- name: "Extract the message for the {{ jasper_server_instance }} server instance (route_id: {{ jasper_route_id }})"
+- name: "Extract the message for the {{ jasper_server_instance }} server instance node {{ jasper_route_id }}"
   shell: |
     echo "{{ item.content }}" \
     | sed 's/<?xml version=1.0 encoding=UTF-8 standalone=yes?>/<?xml version="1.0" encoding="UTF-8" standalone="yes"?>/' \
@@ -135,7 +135,7 @@
     label: "file: {{ item.item.item.file }}, state_id: {{ item.item.stdout | default('') }}"
   when: jasper_env == 'dev' and jasper_route_id == '.1' or jasper_env in ['test', 'prod']
 
-- name: "Check import status for the {{ jasper_server_instance }} server instance (route_id: {{ jasper_route_id }})"
+- name: "Print the import status for the {{ jasper_server_instance }} server instance node {{ jasper_route_id }}"
   debug:
     msg: "file: {{ item.item.item.item.file }}, state_id: {{ item.item.item.stdout }}, message: {{ item.stdout }}"
   loop: "{{ message.results }}"
