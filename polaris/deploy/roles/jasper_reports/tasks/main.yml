@@ -12,8 +12,7 @@
     jasper_deployer_url == '' or
     jasper_deployer_user == '' or
     jasper_deployer_password == '' or
-    jasper_cookie_key == '' or
-    jasper_route_id == ''
+    jasper_cookie_key == ''
 
 - name: Install xmllint on Alpine Linux
   apk:
