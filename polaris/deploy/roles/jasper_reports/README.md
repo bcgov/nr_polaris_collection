@@ -21,7 +21,6 @@ The following variables can be set to customize the role's behavior:
 - `jasper_deployer_user`: The username for deploying reports to the JasperReports Server.
 - `jasper_deployer_password`: The password for deploying reports to the JasperReports Server.
 - `jasper_cookie_key`: The key for the JasperReports Server loadbalancing cookie.
-- `jasper_route_id`: The route ID for the JasperReports Server instance.
 - `jasper_env`: The environment in which the JasperReports Server is running. Must be one of 'dev', 'test', or 'prod'.
 
 ## Example Playbook
@@ -31,8 +30,8 @@ The following variables can be set to customize the role's behavior:
   roles:
     - role: jasper_reports
       vars:
-        jasper_server_instance: "JCRS"
-        jasper_project_name: "EXAMPLE"
+        jasper_server_instance: "JASPER1"
+        jasper_project_name: "JASPER"
         jasper_ds_0_url: "jdbc:oracle:thin:@//hostname:port/service_name"
         jasper_ds_0_user: "user"
         jasper_ds_0_password: "password"
@@ -40,6 +39,5 @@ The following variables can be set to customize the role's behavior:
         jasper_deployer_user: "deployer"
         jasper_deployer_password: "password"
         jasper_cookie_key: "COOKIE_KEY"
-        jasper_route_id: "ROUTE_ID"
         jasper_env: "dev"
 ```
