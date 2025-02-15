@@ -74,7 +74,7 @@
     return_content: true
     validate_certs: false
   loop: "{{ paths }}"
-  when: env_vars == 'dev' or env_vars == 'test' or env_vars == 'prod'
+  when: env_vars == 'test' or env_vars == 'prod'
   ignore_errors: true
 
 - name: "Import the template and main packages on the {{ jasper_server_instance }} server instance node .1"
