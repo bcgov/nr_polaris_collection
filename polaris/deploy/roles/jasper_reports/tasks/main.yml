@@ -46,7 +46,6 @@
   loop:
     - { path: "{{ jasper_reports_dir }}/main/", dest: "{{ jasper_reports_dir }}/main.zip" }
     - { path: "{{ jasper_reports_dir }}/_template/", dest: "{{ jasper_reports_dir}}/template.zip" }
-  when: not source_dir.stat.exists
 
 - name: "Delete the application's reports and datasource on the {{ jasper_server_instance }} server instance node .1"
   uri:
