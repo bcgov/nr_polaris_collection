@@ -49,7 +49,7 @@
 
 - name: "Delete the application's reports and datasource on the {{ jasper_server_instance }} server instance node .1"
   uri:
-    url: "{{ jasper_deployer_url }}/rest/resource/{{ item.path }}"
+    url: "{{ jasper_deployer_url }}/rest/resource/{{ item }}"
     force_basic_auth: yes
     user: "{{ jasper_deployer_user }}"
     password: "{{ jasper_deployer_password }}"
@@ -64,7 +64,7 @@
 
 - name: "Delete the application's reports and datasource on the {{ jasper_server_instance }} server instance node .2"
   uri:
-    url: "{{ jasper_deployer_url }}/rest/resource/{{ item.path }}"
+    url: "{{ jasper_deployer_url }}/rest/resource/{{ item }}"
     force_basic_auth: yes
     user: "{{ jasper_deployer_user }}"
     password: "{{ jasper_deployer_password }}"
