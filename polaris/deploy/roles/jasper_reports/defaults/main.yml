@@ -20,4 +20,11 @@ jasper_invalid_project_names:
 jasper_reports_dir: "{{ playbook_dir }}/jcrs-reports"
 
 jasper_cookie_key: "{{ jasper_cookie_key | default('') }}"
-jasper_route_id: "{{ jasper_route_id | default('') }}"
+
+paths:
+  - "{{ jasper_server_instance }}/{{ jasper_project_name }}"
+  - "{{ jasper_server_instance }}/Data_Sources/{{ jasper_server_instance }}_{{ jasper_project_name }}"
+
+archives:
+  - "{{ jasper_reports_dir }}/template.zip"
+  - "{{ jasper_reports_dir }}/main.zip"
