@@ -84,6 +84,10 @@
     - { file: "main.zip" }
   when: jasper_env == 'dev' and jasper_route_id == '.1' or jasper_env in ['test', 'prod']
 
+- name: "Clear the import_content fact"
+  set_fact:
+    import_content: []
+
 - name: "Get the content for the {{ jasper_server_instance }} server instance node {{ jasper_route_id }}"
   set_fact:
     import_content: "{{ import_content | default([]) + [{ 'file': item.item, 'content': item.content }] }}"
